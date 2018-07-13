@@ -156,7 +156,7 @@ class UserController extends Controller
             ]);
 
             $user->persona_id=$personaid->person_id;
-            $user->start_up_id=$startupid;
+            $user->start_up_id=$startupid->id;
             $user->save();            
 
             return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
@@ -226,8 +226,6 @@ class UserController extends Controller
         $persona->update();
         return response()->json(['msg' => 'Usuario actualizado con éxito', 'success' => true, 'rpta'=> ''], 201);
 
-
-
     	 }catch(\Exception $e){
             return response()->json(['msg' => 'Error al actualizar datos del usuario '.$e, 'success' => false], 201);
     	}      
@@ -240,9 +238,9 @@ class UserController extends Controller
       for ($i=0; $i < $user->count(); $i++){        
 
             $var = $user[$i]["Nacimiento"];
-            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));
-            
+            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));            
         }       
+
         return response()->json(['rpta'=> $user, 'success' => true],200);        
     }
 
