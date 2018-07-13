@@ -12,7 +12,7 @@ class User extends Model
     protected $hidden = ['password'];
 
     protected $fillable = [
-            'name','email','phone' ,'genre','dob','password','rol_id'
+            'email','password','activity','start_up_id','persona_id','tipo_personas','rol_id'
      ];
 
 }

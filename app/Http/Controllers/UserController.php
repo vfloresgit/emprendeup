@@ -9,7 +9,7 @@ use App\Persona;
 use App\Mail\CambioContrasena\CambioContrasenaAdministrador;
 use Illuminate\Support\Facades\Log;
 use Mail;
-use UserEspecialidad;
+use App\UserEspecialidad;
 use DateTime;
 use DB;
 
@@ -99,21 +99,20 @@ class UserController extends Controller
 
      public function registrar(Request $request){
        try{       
-        $soporte = 'soporte@disnovo.com';
-        $user = new User();
+        $soporte = 'soporte@disnovo.com';   
         $personaname = $request->input('name');
-        $user->password = bcrypt($request->input('register_password'));
-        $user->email = $request->input('email');
+        $user_password = bcrypt($request->input('register_password'));
+        $user_email = $request->input('email');
         $personaphone = $request->input('phone');
         $personagenre = $request->input('genre');
         $personadob = $request->input('dob');
 
         if ($request->input('category') == 3){
             if($request->input('sub_category') == null || $request->input('sub_category') == '' || $request->input('sub_category') == -1){
-                    $user->rol_id = $request->input('category') + 0;
+                    $user_rol_id = $request->input('category') + 0;
                 // return response()->json(['msg' => 'No se pudo crear el usuario incubado falta asignarle su subcategoria','success' => false], 201);
             } else {
-                    $user->rol_id = $request->input('category') + $request->input('sub_category');
+                    $user_rol_id = $request->input('category') + $request->input('sub_category');
          }                
          $startup_fecha_inicio = $request->input('fecha_inicio');//Solo aparecera el campo si en categoria se escoje incubado
          $startup_fecha_inicio_historico = $request->input('fecha_inicio');
@@ -122,44 +121,114 @@ class UserController extends Controller
                 if($date != null && $date->format('Y') < 2012){
                     return response()->json(['msg' => 'La fecha de inicio no puede ser menor al 2012','success' => false, 'rpta'=>''], 201);
                 }else{
-                    if ($user->rol_id != null && app('env') == 'prod') {
+                    if ($user_rol_id != null && app('env') == 'prod') {
                         // Mail::to($user->email)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
                         // Mail::to($soporte)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
                     }
                 }
-           } else if($request->input('category') == 2) {
-                $user->rol_id = $request->input('category');
+
+
+           $personaid=Persona::create([
+            'name' => $personaname,
+            'phone' => $personaphone,
+            'genre' => $personagenre,
+            'dob' =>  $personadob,
+            ]);           
+            $startupid=StartUp::create([
+            'fecha_inicio'=> $startup_fecha_inicio,
+            'fecha_inicio_historico'=> $startup_fecha_inicio_historico,
+            ]);
+
+            $user_persona_id=$personaid->person_id;
+            $user_start_up_id=$startupid->id;
+            
+            $user=User::create([
+            'email'=> $user_email,
+            'password'=> $user_password,           
+           
+            'start_up_id'=> $user_start_up_id,
+            'persona_id'=> $user_persona_id,
+             'rol_id'=> $user_rol_id,
+            
+            ]);
+
+
+           }else if($request->input('category')==2){
+                $user_rol_id = $request->input('category');
                 if ($request->input('especialidades') != null) {
-                    $user->especialidades = implode(",",$request->input('especialidades'));
-                }
-                if ($user->rol_id != null && app('env') == 'prod') {
+
+                    $user_especialidades = $request->input('especialidades');
+               
+                     $personaid=Persona::create([
+                      'name' => $personaname,
+                      'phone' => $personaphone,
+                      'genre' => $personagenre,
+                      'dob' =>  $personadob,
+                      ]);
+
+                      $user_persona_id=$personaid->person_id;                
+
+                      
+                      $user=User::create([
+                      'email'=> $user_email,
+                      'password'=> $user_password,           
+                      'persona_id'=> $user_persona_id,
+                       'rol_id'=> $user_rol_id,
+                      
+                      ]);
+                      $userid=$user->user_id;
+
+                      for ($i=0;$i<count($user_especialidades);$i++){                 
+                         UserEspecialidad::create([
+                            'user_id' => $userid,
+                            'idespecialidad' => $user_especialidades[$i],                
+                      ]);
+                 }
+            }
+              
+            if ($user_rol_id != null && app('env') == 'prod') {
                     // Mail::to($user->email)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
                     // Mail::to($soporte)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
-                }
-            }else {
-                $user->rol_id = $request->input('category');
+            }
+          }else{
+
+            $user_rol_id = $request->input('category');
                 // Mail::to($user->email)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
                 // Mail::to($soporte)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
-            }
-            //$persona->save();
-            // $Idpersona=DB::table('personas')->insertGetId(['name'=>$persona->name,'phone'=>$persona->phone,'genre'=>$persona->genre,'dob'=>$persona->dob],,'person_id');
-        
             $personaid=Persona::create([
             'name' => $personaname,
             'phone' => $personaphone,
             'genre' => $personagenre,
             'dob' =>  $personadob,
             ]);
+
             $startupid=StartUp::create([
             'fecha_inicio'=> $startup_fecha_inicio,
             'fecha_inicio_historico'=> $startup_fecha_inicio_historico,
             ]);
 
-            $user->persona_id=$personaid->person_id;
-            $user->start_up_id=$startupid->id;
-            $user->save();            
+            $user_persona_id=$personaid->person_id;
+            $user_start_up_id=$startupid->id;
+            
+            $user=User::create([
+            'email'=> $user_email,
+            'password'=> $user_password,           
+           
+            'start_up_id'=> $user_start_up_id,
+            'persona_id'=> $user_persona_id,
+             'rol_id'=> $user_rol_id,
+            
+            ]);   
+            
 
-            return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
+          }
+            //$persona->save();
+            // $Idpersona=DB::table('personas')->insertGetId(['name'=>$persona->name,'phone'=>$persona->phone,'genre'=>$persona->genre,'dob'=>$persona->dob],,'person_id');
+        
+                  
+
+          return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
+
         }catch(\Exception $e){
 
           echo $e->getMessage();
