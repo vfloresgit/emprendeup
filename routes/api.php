@@ -77,5 +77,5 @@ Route::put('/cambiarPassword/{id}',[
 
 ///METODO ESPECIALIDAD
 Route::get('/listarEspecialidades',[
-    'uses'  => 'EspecialidadController@listar'
+    'uses'  => 'EspecialidadController@listarEspecialidades'
 ]);
