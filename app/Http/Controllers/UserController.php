@@ -111,7 +111,7 @@ class UserController extends Controller
             if($request->input('sub_category') == null || $request->input('sub_category') == '' || $request->input('sub_category') == -1){
                     $user_rol_id = $request->input('category') + 0;
                 // return response()->json(['msg' => 'No se pudo crear el usuario incubado falta asignarle su subcategoria','success' => false], 201);
-            } else {
+            }else {
                     $user_rol_id = $request->input('category') + $request->input('sub_category');
          }                
          $startup_fecha_inicio = $request->input('fecha_inicio');//Solo aparecera el campo si en categoria se escoje incubado
@@ -202,19 +202,14 @@ class UserController extends Controller
             'dob' =>  $personadob,
             ]);
 
-            $startupid=StartUp::create([
-            'fecha_inicio'=> $startup_fecha_inicio,
-            'fecha_inicio_historico'=> $startup_fecha_inicio_historico,
-            ]);
+           
 
             $user_persona_id=$personaid->person_id;
-            $user_start_up_id=$startupid->id;
+        
             
             $user=User::create([
             'email'=> $user_email,
             'password'=> $user_password,           
-           
-            'start_up_id'=> $user_start_up_id,
             'persona_id'=> $user_persona_id,
              'rol_id'=> $user_rol_id,
             
@@ -227,7 +222,7 @@ class UserController extends Controller
         
                   
 
-          return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
+        return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
 
         }catch(\Exception $e){
 
@@ -275,19 +270,21 @@ class UserController extends Controller
 
                 // $user->especialidades = implode(",",$request->input('especialidades'));
                 // $user->especialidades = implode(",",$request->input('especialidades')); //script
-                $userespecialidad=new UserEspecialidad();
-                $especialidadesevaluador=implode(",",$request->input('especialidades'));
+            
+              $especialidadesevaluador=$request->input('especialidades');
                
-               $array = explode(",", $especialidadesevaluador);
+         
 
-               for ($i=1; $i <=count($array); $i++) { 
+              for ($i=0; $i <count($especialidadesevaluador); $i++) { 
                 
+
                 UserEspecialidad::create([
-                  'user_id' => $array[$i],
-                  'idespecialidad' => $array[$i],                
+                  'user_id' => $user->user_id,
+                  'idespecialidad' => $especialidadesevaluador[$i],                
                 ]);
 
-               }
+              
+              }
 
             }
 
