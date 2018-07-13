@@ -7,7 +7,9 @@ use App\User;
 use App\StartUp;
 use App\Persona;
 use App\Mail\CambioContrasena\CambioContrasenaAdministrador;
+use Illuminate\Support\Facades\Log;
 use Mail;
+use UserEspecialidad;
 use DateTime;
 use DB;
 
@@ -25,14 +27,14 @@ class UserController extends Controller
      return response()->json(['rpta' => $user , 'success' => true], 201);
     }
 
-    public function listarActivos(){    
+    public function listarActivos(){
       $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[1])->get();
-      for ($i=0; $i < $user->count(); $i++) {
+         for ($i=0; $i < $user->count(); $i++) {
          $var = $user[$i]["nacimiento"];
           $user[$i]["nacimiento"] = date("d/m/Y", strtotime($var));
+         }
+         return response()->json(['rpta' => $user , 'success' => true], 201);
      }
-     return response()->json(['rpta' => $user , 'success' => true], 201);
-    }
 
     public function listarInactivos(){    
       $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[0])->get();
@@ -51,16 +53,16 @@ class UserController extends Controller
 
      try{
       $user->update();
-            if ($user->category_id != null && app('env') == 'prod' ) {
-                if($user->category_id == 1){                	
-                    Mail::to($user->email)->send(new CambioContrasenaAdministrador($user,$request->input('password'),$request->header('URL')));
-                    Mail::to($soporte)->send(new CambioContrasenaAdministrador($user,$request->input('password'),$request->header('URL')));
-                } else if($user->category_id == 2 ){
-                    Mail::to($user->email)->send(new CambioContrasenaEvaluador($user,$request->input('password'),$request->header('URL')));
-                    Mail::to($soporte)->send(new CambioContrasenaEvaluador($user,$request->input('password'),$request->header('URL')));
-                } else if($user->category_id > 2) { // $user->category == 3 || $user->category == 4 || $user->category == 5 || $user->category == 6
-                    Mail::to($user->email)->send(new CambioContrasenaIncubado($user,$request->input('password'),$request->header('URL')));
-                    Mail::to($soporte)->send(new CambioContrasenaIncubado($user,$request->input('password'),$request->header('URL')));
+            if ($user->rol_id != null && app('env') == 'prod' ) {
+                if($user->rol_id == 1){                	
+                    // Mail::to($user->email)->send(new CambioContrasenaAdministrador($user,$request->input('password'),$request->header('URL')));
+                    // Mail::to($soporte)->send(new CambioContrasenaAdministrador($user,$request->input('password'),$request->header('URL')));
+                } else if($user->rol_id == 2 ){
+                    // Mail::to($user->email)->send(new CambioContrasenaEvaluador($user,$request->input('password'),$request->header('URL')));
+                    // Mail::to($soporte)->send(new CambioContrasenaEvaluador($user,$request->input('password'),$request->header('URL')));
+                } else if($user->rol_id > 2) { // $user->category == 3 || $user->category == 4 || $user->category == 5 || $user->category == 6
+                    // Mail::to($user->email)->send(new CambioContrasenaIncubado($user,$request->input('password'),$request->header('URL')));
+                    // Mail::to($soporte)->send(new CambioContrasenaIncubado($user,$request->input('password'),$request->header('URL')));
                 }
             }
           return response()->json(['msg' => 'Contraseña cambiada' , 'success' => true, 'rpta'=> ''], 201);
@@ -73,8 +75,9 @@ class UserController extends Controller
         $user = User::where('user_id', $id)->first();
         $user->activity = $request->input('activity');
         $user->update();
+
         if($user->start_up_id != null){
-            $startUp = StartUp::where('start_up_id',$user->start_up_id)->first();
+            $startUp = StartUp::where('id',$user->start_up_id)->first();
             $startUp->activity = $request->input('activity');
             $startUp->update();
         }
@@ -83,7 +86,7 @@ class UserController extends Controller
                 return response()->json(['msg' => 'Usuario habilitado', 'success' => true ], 201);
                 break;
             
-            case '2':
+            case '0':
                 return response()->json(['msg' => 'Usuario deshabilitado', 'success' => true ], 201);
                 break;
             
@@ -92,21 +95,18 @@ class UserController extends Controller
                 break;
             }
      
-    }
+     }
 
- public function registrar(Request $request){
-
-        try{       
+     public function registrar(Request $request){
+       try{       
         $soporte = 'soporte@disnovo.com';
         $user = new User();
-        $persona=new Persona();
-        $startup=new StartUp();
-        $persona->name = $request->input('name');
-        $user->password = bcrypt($request->input('password'));
+        $personaname = $request->input('name');
+        $user->password = bcrypt($request->input('register_password'));
         $user->email = $request->input('email');
-        $persona->phone = $request->input('phone');
-        $persona->genre = $request->input('genre');
-        $persona->dob = $request->input('dob');
+        $personaphone = $request->input('phone');
+        $personagenre = $request->input('genre');
+        $personadob = $request->input('dob');
 
         if ($request->input('category') == 3){
             if($request->input('sub_category') == null || $request->input('sub_category') == '' || $request->input('sub_category') == -1){
@@ -114,17 +114,17 @@ class UserController extends Controller
                 // return response()->json(['msg' => 'No se pudo crear el usuario incubado falta asignarle su subcategoria','success' => false], 201);
             } else {
                     $user->rol_id = $request->input('category') + $request->input('sub_category');
-            }                
-         $startup->fecha_inicio = $request->input('fecha_inicio');//Solo aparecera el campo si en categoria se escoje incubado
-         $startup->fecha_inicio_historico = $request->input('fecha_inicio');
+         }                
+         $startup_fecha_inicio = $request->input('fecha_inicio');//Solo aparecera el campo si en categoria se escoje incubado
+         $startup_fecha_inicio_historico = $request->input('fecha_inicio');
 
-                $date =new DateTime($startup->fecha_inicio);
+                $date =new DateTime($startup_fecha_inicio);
                 if($date != null && $date->format('Y') < 2012){
                     return response()->json(['msg' => 'La fecha de inicio no puede ser menor al 2012','success' => false, 'rpta'=>''], 201);
                 }else{
                     if ($user->rol_id != null && app('env') == 'prod') {
-                        Mail::to($user->email)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
-                        Mail::to($soporte)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
+                        // Mail::to($user->email)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
+                        // Mail::to($soporte)->send(new RegistroIncubado($user,$request->input('password'),$request->header('URL')));
                     }
                 }
            } else if($request->input('category') == 2) {
@@ -133,19 +133,32 @@ class UserController extends Controller
                     $user->especialidades = implode(",",$request->input('especialidades'));
                 }
                 if ($user->rol_id != null && app('env') == 'prod') {
-                    Mail::to($user->email)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
-                    Mail::to($soporte)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
+                    // Mail::to($user->email)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
+                    // Mail::to($soporte)->send(new RegistroEvaluador($user,$request->input('password'),$request->header('URL')));
                 }
             }else {
                 $user->rol_id = $request->input('category');
-                Mail::to($user->email)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
-                Mail::to($soporte)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
+                // Mail::to($user->email)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
+                // Mail::to($soporte)->send(new RegistroAdministrador($user,$request->input('password'),$request->header('URL')));
             }
             //$persona->save();
-            $Idpersona=Persona::insertGetId(['name'=>$persona->name,'phone'=>$persona->phone,'genre'=>$persona->genre,'dob'=>$persona->dob]);
-            $user->persona_id=$Idpersona;
+            // $Idpersona=DB::table('personas')->insertGetId(['name'=>$persona->name,'phone'=>$persona->phone,'genre'=>$persona->genre,'dob'=>$persona->dob],,'person_id');
+        
+            $personaid=Persona::create([
+            'name' => $personaname,
+            'phone' => $personaphone,
+            'genre' => $personagenre,
+            'dob' =>  $personadob,
+            ]);
+            $startupid=StartUp::create([
+            'fecha_inicio'=> $startup_fecha_inicio,
+            'fecha_inicio_historico'=> $startup_fecha_inicio_historico,
+            ]);
+
+            $user->persona_id=$personaid->person_id;
+            $user->start_up_id=$startupid;
             $user->save();            
-            $startup->save();
+
             return response()->json(['msg' => 'Usuario registrado con éxito ', 'rpta' => $user,'success' => true], 201);
         }catch(\Exception $e){
 
@@ -159,8 +172,7 @@ class UserController extends Controller
             Log::info('Error '.$e->getMessage());
             return response()->json(['msg' => 'No se pudo crear el usuario','success' => false], 201);
 
-         } 
-
+         }
     }
 
 
@@ -169,26 +181,53 @@ class UserController extends Controller
 
         try{
     		$user = User::where('user_id', $id)->first();
+            
+            $persona=Persona::where('person_id',$user->persona_id)->first();
+
             $user->email = $request->input('email');
-            $user->name = $request->input('name');
-            $user->phone = $request->input('phone');
-            $user->genre = $request->input('genre');
-            $user->dob = $request->input('dob');
-            $user->category = $request->input('category');
+
+            $persona->name = $request->input('name');
+            $persona->phone = $request->input('phone');
+            $persona->genre = $request->input('genre');
+            $persona->dob = $request->input('dob');
+
+            $user->rol_id = $request->input('category');
+
             if ($request->input('fecha_inicio') != null) {
                 $fecha_inicio= $request->input('fecha_inicio'); //Solo aparecera el campo si en categoria se escoje incubado
                 if( $fecha_inicio != null){
-                    $user->fecha_inicio = $fecha_inicio;
+                    $startup=new StartUp();
+                    // $user->fecha_inicio = $fecha_inicio;
+                    $startup->fecha_inicio=$fecha_inicio;
                 }
             }
             if ($request->input('especialidades') != null) {
-                $user->especialidades = implode(",",$request->input('especialidades'));
+               
+
+                // $user->especialidades = implode(",",$request->input('especialidades'));
+                // $user->especialidades = implode(",",$request->input('especialidades')); //script
+                $userespecialidad=new UserEspecialidad();
+                $especialidadesevaluador=implode(",",$request->input('especialidades'));
+               
+               $array = explode(",", $especialidadesevaluador);
+
+               for ($i=1; $i <=count($array); $i++) { 
+                
+                UserEspecialidad::create([
+                  'user_id' => $array[$i],
+                  'idespecialidad' => $array[$i],                
+                ]);
+
+               }
+
             }
 
-            $user->update();
-            return response()->json(['msg' => 'Usuario actualizado con éxito', 'success' => true, 'rpta'=> ''], 201);
+        $user->update();
+        $persona->update();
+        return response()->json(['msg' => 'Usuario actualizado con éxito', 'success' => true, 'rpta'=> ''], 201);
 
-    	
+
+
     	 }catch(\Exception $e){
             return response()->json(['msg' => 'Error al actualizar datos del usuario '.$e, 'success' => false], 201);
     	}      
@@ -196,7 +235,7 @@ class UserController extends Controller
     }
     public function listarIncubados(){
 
-      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as "Fecha de inicio"','users.activity','users.email as "Cuenta de usuario"','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0,1,2])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0,1,2])->whereIn('rol.idroles',[3,4,5,6,7])->get();
         
       for ($i=0; $i < $user->count(); $i++){        
 
@@ -205,6 +244,32 @@ class UserController extends Controller
             
         }       
         return response()->json(['rpta'=> $user, 'success' => true],200);        
+    }
+
+     public function listarIncubadosActivos(){
+
+       $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[1])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+        
+      for ($i=0; $i < $user->count(); $i++){        
+
+            $var = $user[$i]["Nacimiento"];
+            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));
+            
+        }       
+        return response()->json(['rpta'=> $user, 'success' => true],200);  
+    }
+
+     public function listarIncubadosInactivos(){
+
+      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+        
+      for ($i=0; $i < $user->count(); $i++){        
+
+            $var = $user[$i]["Nacimiento"];
+            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));
+            
+        }       
+        return response()->json(['rpta'=> $user, 'success' => true],200);  
     }
 
 

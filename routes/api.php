@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 
 
 //METODOS USUARIO
-Route::get('/registrarUsuario',[
+Route::post('/registrarUsuario',[
     'uses'  => 'UserController@registrar'
 ]);
 //});
@@ -56,4 +56,26 @@ Route::put('/rolUsuario/{id}',[
 
 Route::put('/cambiarpasoUsuario/{id}',[
     'uses'  => 'UserController@cambiarPaso'
+]);
+
+Route::get('/listarIncubados',[
+    'uses'  => 'UserController@listarIncubados'
+]);
+
+Route::get('/listarIncubadosActivos',[
+    'uses'  => 'UserController@listarIncubadosActivos'
+]);
+
+Route::get('/listarIncubadosInactivos',[
+    'uses'  => 'UserController@listarIncubadosInactivos'
+]);
+
+Route::put('/cambiarPassword/{id}',[
+    'uses'  => 'UserController@cambiarPassword'
+]);
+
+
+///METODO ESPECIALIDAD
+Route::get('/listarEspecialidades',[
+    'uses'  => 'EspecialidadController@listar'
 ]);
