@@ -18,29 +18,29 @@ class UserController extends Controller
     //
 
     public function listar(){
-    $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[0,1,2])->get();
+    $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as Fecha de nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[0,1,2])->get();
 
      for ($i=0; $i < $user->count(); $i++) {
-     	 $var = $user[$i]["nacimiento"];
-          $user[$i]["nacimiento"] = date("d/m/Y", strtotime($var));
+     	 $var = $user[$i]["Fecha de nacimiento"];
+          $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));
      }
      return response()->json(['rpta' => $user , 'success' => true], 201);
     }
 
     public function listarActivos(){
-      $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[1])->get();
+      $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as Fecha de nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[1])->get();
          for ($i=0; $i < $user->count(); $i++) {
-         $var = $user[$i]["nacimiento"];
-          $user[$i]["nacimiento"] = date("d/m/Y", strtotime($var));
+         $var = $user[$i]["Fecha de nacimiento"];
+          $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));
          }
          return response()->json(['rpta' => $user , 'success' => true], 201);
-     }
+    }
 
     public function listarInactivos(){    
-      $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[0])->get();
+      $user=User::join('personas as p','users.persona_id','=','p.person_id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('users.email as Cuenta de usuario','p.name as Nombre','rol.rolescol as Categoria','p.dob as Fecha de nacimiento','p.phone as Telefono','p.genre as Genero','users.activity as Estado','users.user_id')->whereIn('users.activity',[0])->get();
       for ($i=0; $i < $user->count(); $i++) {
-         $var = $user[$i]["nacimiento"];
-          $user[$i]["nacimiento"] = date("d/m/Y", strtotime($var));
+         $var = $user[$i]["Fecha de nacimiento"];
+          $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));
      }
      return response()->json(['rpta' => $user , 'success' => true], 201);
     }
@@ -233,12 +233,12 @@ class UserController extends Controller
     }
     public function listarIncubados(){
 
-      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0,1,2])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Fecha de nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0,1,2])->whereIn('rol.idroles',[3,4,5,6,7])->get();
         
       for ($i=0; $i < $user->count(); $i++){        
 
-            $var = $user[$i]["Nacimiento"];
-            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));            
+            $var = $user[$i]["Fecha de nacimiento"];
+            $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));            
         }       
 
         return response()->json(['rpta'=> $user, 'success' => true],200);        
@@ -246,12 +246,12 @@ class UserController extends Controller
 
      public function listarIncubadosActivos(){
 
-       $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[1])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+       $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Fecha de nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[1])->whereIn('rol.idroles',[3,4,5,6,7])->get();
         
       for ($i=0; $i < $user->count(); $i++){        
 
-            $var = $user[$i]["Nacimiento"];
-            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));
+            $var = $user[$i]["Fecha de nacimiento"];
+            $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));
             
         }       
         return response()->json(['rpta'=> $user, 'success' => true],200);  
@@ -259,12 +259,12 @@ class UserController extends Controller
 
      public function listarIncubadosInactivos(){
 
-      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp ','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0])->whereIn('rol.idroles',[3,4,5,6,7])->get();
+      $user = User::join('personas as p','users.persona_id','=','p.person_id')->join('startup as stup','users.start_up_id','=','stup.id')->join('roles as rol','users.rol_id','=','rol.idroles')->select('stup.name as StartUp','stup.fecha_inicio as Fecha de inicio','users.activity','users.email as Cuenta de usuario','p.name as Nombre','p.dob as Fecha de nacimiento','p.phone as Telefono','rol.idroles')->whereIn('users.activity',[0])->whereIn('rol.idroles',[3,4,5,6,7])->get();
         
       for ($i=0; $i < $user->count(); $i++){        
 
-            $var = $user[$i]["Nacimiento"];
-            $user[$i]["Nacimiento"] = date("d/m/Y", strtotime($var));
+            $var = $user[$i]["Fecha de nacimiento"];
+            $user[$i]["Fecha de nacimiento"] = date("d/m/Y", strtotime($var));
             
         }       
         return response()->json(['rpta'=> $user, 'success' => true],200);  
