@@ -200,12 +200,9 @@ class UserController extends Controller
             'phone' => $personaphone,
             'genre' => $personagenre,
             'dob' =>  $personadob,
-            ]);
+            ]);           
 
-           
-
-            $user_persona_id=$personaid->person_id;
-        
+            $user_persona_id=$personaid->person_id;     
             
             $user=User::create([
             'email'=> $user_email,

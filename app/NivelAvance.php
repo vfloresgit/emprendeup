@@ -11,6 +11,6 @@ class NivelAvance extends Model
     protected $table = 'nivel_avance';
     protected $primaryKey = 'nivel_avance_id';
     protected $fillable = [
-        'escalamiento', 'product_min_viable','product_market_fit'
+        'estado_activo','niveles_de_avance_id','start_ups_start_up_id'
     ];
 }

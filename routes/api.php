@@ -79,3 +79,16 @@ Route::put('/cambiarPassword/{id}',[
 Route::get('/listarEspecialidades',[
     'uses'  => 'EspecialidadController@listarEspecialidades'
 ]);
+
+///METODO MES
+Route::post('/registrarMes',[
+    'uses'  => 'MesController@registrar'
+]);
+
+
+//METODO STARTUP
+Route::get('/exportById/{id}',[
+    'uses' => 'StartUpController@exportById'
+]);
+
+//METODO EVALUADORES
