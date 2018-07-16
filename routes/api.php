@@ -91,4 +91,13 @@ Route::get('/exportById/{id}',[
     'uses' => 'StartUpController@exportById'
 ]);
 
+Route::put('/editarStartUp/{id}',[
+    'uses'  => 'StartUpController@editar'
+]);
+
+Route::post('/registrarStartUp',[
+    'uses'  => 'StartUpController@registrar'
+]);
+
+
 //METODO EVALUADORES
