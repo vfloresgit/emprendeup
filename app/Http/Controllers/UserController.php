@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\User;
 use App\StartUp;
 use App\Persona;
+use App\Servicio;
+use Illuminate\Support\Facades\Hash;
 use App\Mail\CambioContrasena\CambioContrasenaAdministrador;
 use Illuminate\Support\Facades\Log;
 use Mail;
@@ -331,6 +333,274 @@ class UserController extends Controller
             
         }       
         return response()->json(['rpta'=> $user, 'success' => true],200);  
+    }
+
+
+    public function login(Request $request)
+    {
+
+        $user = User::where('email', $request->input('email'))->first();
+        // $user = User::join('','','','');
+
+        $sidebar1 = '';
+        $sidebar2='';
+        $sidebar3='';
+        
+        if ($user != null)
+        {
+            if($user->activity !== 1){
+                return response()->json(['msg' => 'Este usuario se encuentra inactivo' , 'rpta' =>null ,'success' => false ], 200);
+            } else {
+
+                if (Hash::check($request->input('password'), $user->password )) {
+                    /*if($user->category == 1){
+                    Mail::send(['text'=>'mail'],['name','Administración Emprende UP'],function($message){
+                        $message->to($user->email,$user->name)->subject('Notificación');
+                        $message->from('[correo-electronico]','AdminUP');
+                    } );
+                }*/
+                if($user->rol_id > 2) {
+                       // echo 'Entro a usuario de tipo incubado';
+                    // $startUp = StartUp::where('id',$user->start_up_id)->first();                    
+                    $startUp = StartUp::join('meses','startup.id','=','meses.startup_id')->join('fase','meses.fase_id','=','fase_id')->where()->get();
+
+                    if($startUp != null){
+                            //echo 'Tiene registrada una startup';
+                        // $user['cambio_fase'] = $startUp->cambio_fase;
+
+                        $user['fase'] = $startUp->nombre;
+
+                        $evaluacionesActivadas = DB::table('aspectos')
+                        ->join('evaluacion_aspectos', function($join){
+                            $join->on('aspectos.idaspectos','=','evaluacion_aspectos.aspectos_idaspectos')
+                            ->join('meses','evaluacion_aspectos.meses_id','=','meses.idmes');
+                            }
+                        )
+                        ->select(
+                            'evaluacion_aspectos.porcentaje as porcentaje',
+                            'meses.month_id as month',
+                            'meses.startup_id as start_up_id',
+                            'meses.fase as fase'
+                         )
+                        ->where('meses.start_up_id','=',$user->start_up_id)
+                        ->where('meses.fase','=',$startUp->fase)
+                        ->distinct()
+                        ->get();
+
+                        $evaluacionesEvaluadas = $evaluacionesActivadas->where('porcentaje','<>',0);
+                        
+                        $cantidadEvaluacionesActivadas = sizeof(json_decode($evaluacionesActivadas,true));
+                        $cantidadEvaluacionesEvaluadas = sizeof(json_decode($evaluacionesEvaluadas,true));
+                            // echo '******************* Evaluaciones Activadas *******************';
+                            // echo $evaluacionesActivadas;
+                            // echo '**************************************************************';
+                            // echo '******************* Cantidad de Evaluaciones Activadas *******************';
+                            // echo $cantidadEvaluacionesActivadas;
+                            // echo '**************************************************************';
+                            // echo '******************* Cantidad de Evaluaciones Evaluadas *******************';
+                            // echo $cantidadEvaluacionesEvaluadas;
+                            // echo '**************************************************************';
+                        $notificacion = 'No olvide registrar la información correspondiente para los formularios';
+                            //echo 'Sin problemas al traer evaluaciones';
+                        if($cantidadEvaluacionesActivadas >  $cantidadEvaluacionesEvaluadas){
+                            $notificacion = $notificacion.' de evaluacion';
+                                //echo 'Le faltan completar evaluaciones';
+
+
+                            $indicadoresActivados = DB::table('rendimientos_economico_montos')
+                            ->join('meses', function($join){
+                                    //echo '***********Entro a empleos creado empleados*********';
+                                $join->on('rendimientos_economico_montos.meses_id','=','meses.idmes')
+                                ->where('meses.estado_activo','=',1);
+                            })
+                            ->join('empleados', function($join){
+                                $join->on('meses.idmes','=','empleados.meses_id')
+                                ->where('empleados.estado_activo','=', 1);
+                            })
+                            ->select(
+                                'meses.month_id as month_month_id',
+                                'meses.startup_id as rend_start_up_id',
+                                'empleados.tiempo_parcial as emp_hombres_tiempo_parcial'                       
+                            )
+                            ->where('meses.startup_id','=',$user->start_up_id)
+                            ->where('rendimientos_economico_montos.fase','=',$startUp->fase)
+                            ->where('rendimientos_economico_montos.estado_activo','=', 1)
+                            ->distinct()
+                            ->get();
+                            
+                            //echo $indicadoresActivados;                            
+                            //echo 'Termino de cargar indicadores';
+                            $indicadoresEvaluados =
+                            $indicadoresActivados->where('facturacion','<>', NULL)
+                            ->where('emp_hombres_tiempo_parcial','<>', NULL);
+
+                            //////////////////////////////////////////////////////
+                            //////////////////////////////////////////////////////
+                            //////////////////////////////////////////////////////
+
+                            $cantidadIndicadoresActivados = sizeof(json_decode($indicadoresActivados,true));
+                            $cantidadIndicadoresEvaluados = sizeof(json_decode($indicadoresEvaluados,true));
+                            
+                                // echo '*******************Cantidad de Indicadores Activados********************';
+                                // echo '*******************'.$cantidadIndicadoresActivados.'********************';
+                                // echo '*******************Cantidad de Indicadores Evaluados********************';
+                                // echo '*******************'.$cantidadIndicadoresEvaluados.'********************';
+                            if ($cantidadIndicadoresActivados > $cantidadIndicadoresEvaluados) {
+                                $notificacion = $notificacion.' e indicadores';
+                            } else {
+                                $asesoriasActivadas=Servicio::join('evaluacion_incubadora','servicio.id','=','evaluacion_incubadora.asesoria_tipo_idasesoria_tipo')->join('meses','evaluacion_incubadora.meses_id','=','meses.idmes')
+                                ->where('fase_id',$startUp->fase)->get();
+                              
+                                $asesoriasEvaluadas = $asesoriasActivadas->where('satisfaccion','<>',NULL);
+                                $cantAsesoriasActivadas = sizeof(json_decode($asesoriasActivadas,true));
+                                $cantAsesoriasEvaluadas = sizeof(json_decode($asesoriasEvaluadas,true));
+                                if ($cantAsesoriasActivadas > $cantAsesoriasEvaluadas) {
+                                    $notificacion = $notificacion.' e indicadores';
+                                } else {                                  
+                                    // $mentoriasActivadas = Persona::where('start_up_id',$user->start_up_id)
+                                    // ->where('estado_activo',1)->get();
+                                    
+                                    $mentoriasActivadas=Persona::join('persona_startup','personas.person_id','=','persona_startup.persona_id')->where('persona_startup.startup_id',$user->start_up_id)->where('',1)->get();
+
+                                    // $mentoriasEvaluadas = $mentoriasActivadas->where('especialidad','<>',NULL);
+                                    $cantMentoriasActivadas = sizeof(json_decode($mentoriasActivadas,true));
+                                    $cantMentoriasEvaluadas = sizeof(json_decode($mentoriasEvaluadas,true));
+                                    if ($cantMentoriasActivadas > $cantMentoriasEvaluadas) {
+                                        $notificacion = $notificacion.' e indicadores';
+                                    }
+                                }
+                            }
+                            return response()->json(
+                                [
+                                    'success' => true,
+                                    'msg' => $notificacion.' de sus meses activados' ,
+                                    'rpta' =>$user
+                                ],201
+                            );
+                        } else{
+                                // echo '*********************************';
+                                // echo 'LLENO SUS EVALUACIONES';
+                                // echo '****************************************';
+                        
+                            $indicadoresActivados = DB::table('rendimientos_economico_montos')
+                            ->join('meses', function($join){
+                                    //echo '***********Entro a empleos creado empleados*********';
+                                $join->on('rendimientos_economico_montos.meses_id','=','meses.idmes')
+                                ->where('meses.estado_activo','=',1);
+                            })
+                            ->join('empleados', function($join){
+                                $join->on('meses.idmes','=','empleados.meses_id')
+                                ->where('empleados.estado_activo','=', 1);
+                            })
+                            ->select(
+                                'meses.month_id as month_month_id',
+                                'meses.startup_id as rend_start_up_id',
+                                'empleados.tiempo_parcial as emp_hombres_tiempo_parcial'                       
+                            )
+                            ->where('meses.startup_id','=',$user->start_up_id)
+                            ->where('rendimientos_economico_montos.fase','=',$startUp->fase)
+                            ->where('rendimientos_economico_montos.estado_activo','=', 1)
+                            ->distinct()
+                            ->get();
+                                //echo $indicadoresActivados;
+                            
+                                //echo 'Termino de cargar indicadores';
+                               $indicadoresEvaluados =
+                            $indicadoresActivados->where('facturacion','<>', NULL)
+                            ->where('emp_hombres_tiempo_parcial','<>', NULL);
+
+                            $cantidadIndicadoresActivados = sizeof(json_decode($indicadoresActivados,true));
+                            $cantidadIndicadoresEvaluados = sizeof(json_decode($indicadoresEvaluados,true));
+                            
+                                // echo '*******************Cantidad de Indicadores Activados********************';
+                                // echo '*******************'.$cantidadIndicadoresActivados.'********************';
+                                // echo '*******************Cantidad de Indicadores Evaluados********************';
+                                // echo '*******************'.$cantidadIndicadoresEvaluados.'********************';
+                            
+                            
+                            if ($cantidadIndicadoresActivados > $cantidadIndicadoresEvaluados) {
+                                $notificacion = $notificacion.' de indicadores';
+                                return response()->json(
+                                    [
+                                        'success' => true,
+                                        'msg' => $notificacion.' de sus meses activados' ,
+                                        'rpta' =>$user
+                                    ],201
+                                );
+                            } else {                                  
+
+                                $asesoriasActivadas=Servicio::join('evaluacion_incubadora','servicio.id','=','evaluacion_incubadora.asesoria_tipo_idasesoria_tipo')->join('meses','evaluacion_incubadora.meses_id','=','meses.idmes')
+                                ->where('fase_id',$startUp->fase)->get();
+                              
+                                $asesoriasEvaluadas = $asesoriasActivadas->where('satisfaccion','<>',NULL);
+                                $cantAsesoriasActivadas = sizeof(json_decode($asesoriasActivadas,true));
+                                $cantAsesoriasEvaluadas = sizeof(json_decode($asesoriasEvaluadas,true));
+                                    // echo '*********************************Asesorias Activadas********************************';
+                                    // echo '*****************************'.$asesoriasActivadas.'*******************************';
+                                    // echo '***************************************************************************';
+                                    // echo '*******************Cantidad de Asesorias Activadas********************';
+                                    // echo '*******************'.$cantAsesoriasActivadas.'********************';
+                                    // echo '*******************Cantidad de Asesorias Evaluadas********************';
+                                    // echo '*******************'.$cantAsesoriasEvaluadas.'********************';
+                                if ($cantAsesoriasActivadas > $cantAsesoriasEvaluadas) {
+                                    $notificacion = $notificacion.' de indicadores';
+                                    return response()->json(
+                                        [
+                                            'success' => true,
+                                            'msg' => $notificacion.' de sus meses activados' ,
+                                            'rpta' =>$user
+                                        ],201
+                                    );
+                                } else {
+
+                                    $mentoriasActivadas=Persona::join('persona_startup','personas.person_id','=','persona_startup.persona_id')->where('persona_startup.startup_id',$user->start_up_id)->where('',1)->get();
+
+                                    // $mentoriasEvaluadas = $mentoriasActivadas->where('especialidad','<>',NULL);
+                                    $cantMentoriasActivadas = sizeof(json_decode($mentoriasActivadas,true));
+                                    $cantMentoriasEvaluadas = sizeof(json_decode($mentoriasEvaluadas,true));
+
+                                    if ($cantMentoriasActivadas > $cantMentoriasEvaluadas) {
+                                        $notificacion = $notificacion.' de indicadores';
+                                        return response()->json(
+                                            [
+                                                'success' => true,
+                                                'msg' => $notificacion.' de sus meses activados' ,
+                                                'rpta' =>$user
+                                            ],201
+                                        );
+                                    } else {
+                                        return response()->json(['success' => true,'msg' => 'Usuario logueado con exito' , 'rpta' =>$user], 201);
+                                    }
+                                }
+                            }
+                        }
+                            /*if($eva){
+                                return response()->json(
+                                    [
+                                        'success' => true,
+                                        'msg' => 'Usuario logueado con exito' ,
+                                        'rpta' =>$user,
+                                        'notificacion'=>'No olvide registrar la información correspondiente para los formularios de 
+                                        evaluacion e indicadores en sus meses activados'
+                                    ],201
+                                );
+                            }*/
+                        } 
+                        
+                    } else {
+                        $user['cambio_fase'] = null;
+                        $user['fase'] = null;
+                    }
+                    return response()->json(['success' => true,'msg' => 'Usuario logueado con exito' , 'rpta' =>$user], 201);
+                } else {
+                    return response()->json(['msg' => 'Contraseña incorrecta','success' => false, 'rpta'=>''], 201);
+                }
+            }
+            
+        } else {
+            return response()->json(['msg' => 'La cuenta de ususario no existe','success' => false, 'rpta'=>''], 201);
+        }
+        
     }
 
 

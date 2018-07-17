@@ -74,7 +74,6 @@ Route::put('/cambiarPassword/{id}',[
     'uses'  => 'UserController@cambiarPassword'
 ]);
 
-
 ///METODO ESPECIALIDAD
 Route::get('/listarEspecialidades',[
     'uses'  => 'EspecialidadController@listarEspecialidades'
@@ -99,5 +98,20 @@ Route::post('/registrarStartUp',[
     'uses'  => 'StartUpController@registrar'
 ]);
 
+Route::put('/editarPermiso/{id}',[
+    'uses'  => 'UserController@editarPermiso'
+]);
+
+Route::put('/editarFechaDeInicio/{id}',[
+    'uses'  => 'UserController@editarFechaDeInicio'
+]);
+
+Route::get('/obtenerStartUp/{id}',[
+    'uses'  => 'StartUpController@obtener'
+]);
+
+Route::put('/cerrarPeriodo/{id}',[
+    'uses'  => 'StartUpController@cerrarPeriodo'
+]);
 
 //METODO EVALUADORES
