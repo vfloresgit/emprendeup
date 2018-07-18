@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-
 //METODOS USUARIO
 Route::post('/registrarUsuario',[
     'uses'  => 'UserController@registrar'
