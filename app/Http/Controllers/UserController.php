@@ -150,10 +150,8 @@ class UserController extends Controller
            
             'start_up_id'=> $user_start_up_id,
             'persona_id'=> $user_persona_id,
-             'category'=> $user_category,
-            
+            'category'=> $user_category,            
             ]);
-
 
            }else if($request->input('category')==2){
                 $user_category= $request->input('category');
@@ -551,7 +549,7 @@ class UserController extends Controller
                                             'rpta' =>$user
                                         ],201
                                     );
-                                } else {
+                                }else{
 
                                     $mentoriasActivadas=Persona::join('persona_startup','personas.person_id','=','persona_startup.persona_id')->where('persona_startup.startup_id',$user->start_up_id)->where('',1)->get();
 
@@ -602,6 +600,59 @@ class UserController extends Controller
         }
         
     }
+
+    public function guardarUserStarup(){
+           
+      $User = User::find(72);
+      $Startup = StartUp::find(43);
+
+      $User->startups()->attach($Startup->id);
+
+
+
+    }
+
+    public function ListadoRelacionPersona(){
+      // $tags = $user->startups()->get();
+
+     $user = User::all();
+      
+      // if($user->startups()->count() > 0) {
+      //    echo "varios usuarios";
+      // }else{
+      //    echo "no hay usuarios";
+      // }
+       // $all = Item::all();
+     foreach($user as $item){
+
+            $tags=$item->startups()->get();
+            foreach ($tags as $tag) {
+               echo $tag->name;
+               echo "<br>";
+            }
+          // $tags=$item->startups;
+
+          // foreach ($tags as $listas) {
+          //     echo $listas->name;
+          //     echo "<br>";
+          // }
+        }
+      // foreach ($user as $listas) {
+      //      echo $listas->email;
+      // }
+     // $user = User::all();
+     // foreach ($user->startup()->get() as $show){
+     // echo $show->start_up_id;
+     // }     
+        // foreach ($user->startups as $startup) {
+        // //
+        //   echo $startup->name;
+        //   echo "<br>";
+        //   echo $startup->id;
+        //   echo "<br>";
+        // }
+     
+     }
 
 
 }

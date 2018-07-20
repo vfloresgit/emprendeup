@@ -16,6 +16,12 @@ use Illuminate\Http\Request;
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
+Route::get('/guardarUserStarup',[
+    'uses'  => 'UserController@guardarUserStarup'
+]);
+Route::get('/ListadoRelacionPersona',[
+    'uses'  => 'UserController@ListadoRelacionPersona'
+]);
 
 //METODOS USUARIO
 Route::post('/registrarUsuario',[
@@ -79,8 +85,19 @@ Route::get('/listarEspecialidades',[
 ]);
 
 ///METODO MES
-Route::post('/registrarMes',[
-    'uses'  => 'MesController@registrar'
+
+// Route::post('/registrarMes',[
+//     'uses'  => 'MesController@registrar'
+// ]);
+
+//METODO FASE
+
+Route::post('/AsignarMeses',[
+    'uses'  => 'FaseController@registrarCantidadMeses'
+]);
+
+Route::get('/pruebaFecha',[
+    'uses'  => 'FaseController@pruebaFecha'
 ]);
 
 

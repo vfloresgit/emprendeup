@@ -90,8 +90,6 @@ class EspecialidadController extends Controller
         $tabla = $this->stripslashes_deep($tabla);
         return response()->json(['rpta' => $tabla, 'success'=> true], 201);
     }
-
-
-
+    
 
 }

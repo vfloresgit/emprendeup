@@ -13,5 +13,9 @@ class StartUp extends Model
    protected $fillable = [
         'name', 'foundation_year','email','phone','web_page','industry_sector','especificar','product_type','product_details','tiempo','cambio_fase','activity','fecha_inicio','fecha_inicio_historico','users_user_id','departamento_id','province_id','district_id','pasos'
     ];
-
+   
+  public function users(){
+    return $this->belongsToMany('App\User','user_startup','user_id','start_up_id');
+    // ->withPivot('url');
+    }
 }

@@ -11,6 +11,7 @@ class Fase extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'inicio','cantidad_meses','fin','estado_activo'
+        'inicio','cantidad_meses','fin','estado_activo','nombre'
     ];
+    public $timestamps=false;
 }
